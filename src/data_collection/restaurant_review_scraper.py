@@ -19,7 +19,7 @@ from .config import PATHS, get_random_delay, get_batch_size
 from .scraper_utils import (
     scroll_element, expand_all_text, extract_rating_from_stars,
     extract_review_metadata, safe_get_text, safe_get_attribute,
-    print_progress
+    print_progress, has_review_photos
 )
 
 
@@ -187,6 +187,9 @@ class RestaurantReviewScraper:
                     # Get additional metadata
                     metadata = extract_review_metadata(review)
 
+                    # Check if review has photos
+                    has_photos = has_review_photos(review)
+
                     review_data = {
                         'restaurant_id': restaurant_id,
                         'restaurant_name': restaurant_name,
@@ -196,6 +199,7 @@ class RestaurantReviewScraper:
                         'rating': rating,
                         'review_date': date,
                         'review_text': text,
+                        'has_photos': has_photos,
                         'dining_type': metadata.get('dining_type', ''),
                         'price_range': metadata.get('price_range', ''),
                         'food_rating': metadata.get('food_rating', ''),

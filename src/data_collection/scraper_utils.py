@@ -171,7 +171,7 @@ def expand_all_text(driver, button_selector="button.w8nwRe.kyuRq", max_attempts=
 
 def extract_rating_from_stars(review_element):
     """
-    Extract rating by counting star elements
+    Extract rating from aria-label attribute
 
     Args:
         review_element: Selenium element containing the review
@@ -180,13 +180,40 @@ def extract_rating_from_stars(review_element):
         Integer rating (1-5) or None if not found
     """
     try:
-        stars = review_element.find_elements(
-            By.CSS_SELECTOR,
-            "span.kvMYJc span.google-symbols.NhBTye"
-        )
-        return len(stars) if stars else None
+        # Find the rating container with aria-label
+        rating_span = review_element.find_element(By.CSS_SELECTOR, "span.kvMYJc[role='img']")
+
+        if rating_span:
+            # Get the aria-label attribute (e.g., "5 stars", "2 stars")
+            aria_label = rating_span.get_attribute('aria-label')
+
+            if aria_label:
+                # Extract the number from "X stars" format
+                match = re.match(r'(\d+)\s*star', aria_label, re.IGNORECASE)
+                if match:
+                    return int(match.group(1))
+
+        return None
     except Exception:
         return None
+
+
+def has_review_photos(review_element):
+    """
+    Check if review has photos attached
+
+    Args:
+        review_element: Selenium element containing the review
+
+    Returns:
+        Boolean - True if review has photos, False otherwise
+    """
+    try:
+        # Look for photo/image buttons in the review
+        photo_buttons = review_element.find_elements(By.CSS_SELECTOR, "button.Tya61d")
+        return len(photo_buttons) > 0
+    except Exception:
+        return False
 
 
 def extract_review_metadata(review_element):

@@ -18,7 +18,7 @@ from .config import PATHS, FUZZY_MATCHING, get_random_delay, get_batch_size
 from .scraper_utils import (
     normalize_restaurant_name, scroll_element, expand_all_text,
     extract_rating_from_stars, extract_review_metadata,
-    safe_get_text, print_progress
+    safe_get_text, print_progress, has_review_photos
 )
 
 
@@ -194,6 +194,9 @@ class UserProfileScraper:
                     # Extract additional metadata
                     metadata = extract_review_metadata(review_elem)
 
+                    # Check if review has photos
+                    has_photos = has_review_photos(review_elem)
+
                     review_data = {
                         'restaurant_id': restaurant_id,
                         'restaurant_name': place_name,
@@ -201,6 +204,7 @@ class UserProfileScraper:
                         'rating': rating,
                         'review_date': date,
                         'review_text': text,
+                        'has_photos': has_photos,
                         'dining_type': metadata.get('dining_type', ''),
                         'food_rating': metadata.get('food_rating', ''),
                         'service_rating': metadata.get('service_rating', ''),
