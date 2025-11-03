@@ -27,10 +27,10 @@ wheels/
 .ipynb_checkpoints
 *.ipynb
 
-# Data files
-data/raw/*.csv
-data/raw/*.json
-data/raw/*.txt
+# Data files - keep stage files, ignore backups and temp
+data/raw/*.backup
+data/raw/*.bak
+data/raw/*.tmp
 data/processed/*.csv
 data/processed/*.json
 data/splits/*.csv
