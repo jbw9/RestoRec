@@ -25,19 +25,21 @@ Discover restaurants in Champaign and filter by quality metrics to identify data
    - Menu links
 
 3. **Filtering**: Keep only restaurants with:
-   - ≥ 30 reviews (sufficient data)
-   - ≥ 3.5 rating (quality threshold)
+   - ≥ 10 reviews (sufficient data)
+   - No minimum rating threshold
 
 ### Output
-- `data/raw/stage1_restaurants_filtered.csv` (~658 restaurants)
+- `data/raw/stage1_restaurants.csv` (768 restaurants with complete details)
 
 ### Key Metrics
 ```
 Total restaurants discovered: 874
-After filtering: 658 (75.3%)
-Average reviews: 536
-Average rating: 4.36⭐
-Median reviews: 310
+After filtering (10+ reviews): 768 (87.9%)
+Average reviews per restaurant: ~83
+Average rating: 4.38⭐
+Cuisine field: 100% populated
+Hours field: 100% populated
+Dining options field: 100% populated
 ```
 
 ---
@@ -49,11 +51,11 @@ Extract all reviews and identify unique reviewers using their Google Maps profil
 
 ### Files
 - `restaurant_review_scraper_enhanced.py` - Review scraper
-- `run_stage2_filtered.py` - Orchestrator
+- `run_full_pipeline.py` - Orchestrator
 
 ### Process
 
-For each of the 658 filtered restaurants:
+For each of the 768 filtered restaurants (10+ reviews):
 
 1. **Navigate** to restaurant's Google Maps page
 2. **Load all reviews** by scrolling and pagination
@@ -125,14 +127,17 @@ ReviewerC          N/A         4.5          4.5     ...
 
 ### Expected Matrix Properties
 ```
-Matrix size: ~200-300 reviewers × 658 restaurants
-Sparsity: ~95-98% (sparse data is normal and expected)
-- Each reviewer typically rates 5-50 restaurants
-- Each restaurant typically rated by 100-200+ reviewers
+Full Matrix size: 37,732 reviewers × 710 restaurants
+Dense Matrix size: 1,871 reviewers × 710 restaurants (5+ reviews)
+Sparsity: 99.76% (expected for collaborative filtering)
+- Each reviewer typically rates 1-20 restaurants
+- Each restaurant typically rated by 50-110+ reviewers
 
 High-value for recommendations:
-- Reviewers with 10+ reviews across different restaurants
+- Reviewers with 5+ reviews (1,871 reviewers in dense matrix)
 - Restaurants with 50+ reviews from diverse reviewers
+- Top reviewer: 111 reviews (Ben Brenner)
+- Top restaurant: 110 reviews (Bobo's Barbecue)
 ```
 
 ---
@@ -164,14 +169,19 @@ High-value for recommendations:
 
 ### Run full pipeline:
 
+```bash
+# Run all 3 stages automatically
+python run_full_pipeline.py
+
+# Or run individual stages:
+python run_full_pipeline.py --stage 1
+python run_full_pipeline.py --stage 2
+python run_full_pipeline.py --stage 3
+```
+
+### Or run stages directly in Python:
+
 ```python
-# 1. Filter restaurants by quality
-python3 filter_restaurants_by_quality.py
-
-# 2. Scrape reviews for filtered restaurants
-python3 run_stage2_filtered.py
-
-# 3. Build preference matrix
 from src.data_collection.matrix_builder import build_user_restaurant_matrix
 build_user_restaurant_matrix()
 ```
@@ -201,8 +211,9 @@ target_reviewer = matrix.loc['https://www.google.com/maps/contrib/...']
    - Enables cross-restaurant recommendation
 
 2. **Filtering by review count**: Ensures sufficient data points
-   - 30-review minimum captures meaningful preference patterns
-   - Filters out low-quality or temporarily-popular places
+   - 10-review minimum captures meaningful preference patterns
+   - Balances between data richness and restaurant diversity
+   - Filters out new or inactive restaurants
 
 3. **Sparse matrix is expected**:
    - Not a problem - sparse data is normal for recommendation systems
@@ -217,11 +228,14 @@ target_reviewer = matrix.loc['https://www.google.com/maps/contrib/...']
 
 ## Performance Metrics
 
-| Stage | Time per Restaurant | Total Time (658) |
+| Stage | Time per Restaurant | Total Time (768 restaurants) |
 |-------|-------------------|-----------------|
-| Stage 1 | 15-25 sec | ~2-3 hours |
-| Stage 2 | 20-60 sec | ~3-10 hours |
+| Stage 1 | 5-15 sec | ~1-2 hours |
+| Stage 2 | 20-60 sec | ~4-8 hours |
 | Stage 3 | N/A | <1 min |
+| **Total** | - | **~16 hours** |
+
+**Actual recorded execution**: 15.91 hours for complete pipeline on 768 restaurants generating 63,888 reviews
 
 ---
 
